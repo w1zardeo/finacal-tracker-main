@@ -179,16 +179,19 @@ function ExpenseInput({ title, fields, data, onChange, isLast, readOnly }) {
         const value = data[fieldKey]?.value;
 
         return (
-          <View key={fieldKey} style={readOnly ? styles.readOnlyRow : styles.inputRow}>
+          <View
+            key={fieldKey}
+            style={readOnly ? styles.readOnlyRow : styles.inputRow}
+          >
             <Text style={styles.label}>{fieldKey}</Text>
 
             {readOnly ? (
-              <View style={styles.valueContainer}>
+              <View style={styles.valueContainerRow}>
                 <Text style={styles.readOnlyValue}>
-                  {parseFloat(value || 0).toLocaleString("uk-UA")}
+                  {parseFloat(value || 0).toLocaleString("uk-UA")} 
                 </Text>
                 <Text style={styles.readOnlyFrequency}>
-                  {selected === "Щороку" ? "Раз в год" : "Ежемесячно"}
+                  {selected === "Щороку" ? "Щороку" : "Щомісяця"}
                 </Text>
               </View>
             ) : (
@@ -308,6 +311,7 @@ const styles = StyleSheet.create({
     borderColor: "#D0D0D0",
     borderRadius: 6,
     shadowColor: "#000",
+    zIndex: 999,
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
@@ -323,14 +327,22 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     flex: 2,
   },
+  valueContainerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    flex: 2,
+  },
   readOnlyValue: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "500",
     color: "#000",
+    marginRight: 8,
   },
   readOnlyFrequency: {
-    fontSize: 13,
+    fontSize: 16,
     color: "#888",
+    fontWeight: 500
   },
 });
 

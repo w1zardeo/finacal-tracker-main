@@ -381,18 +381,17 @@ function CalculatorScreen({ navigation }) {
           <View style={styles.resultContainer}>
             <View style={styles.resultRow}>
               <View>
-                <Text style={styles.totalTitle}>Итого</Text>
+                <Text style={styles.totalTitle}>Загалом</Text>
               </View>
 
               <View style={{ alignItems: "flex-end" }}>
                 <Text style={styles.totalAmount}>
                   {totalMonthly.toLocaleString("uk-UA")}
                 </Text>
-                <Text style={styles.totalAmountSub}>0.00</Text>
               </View>
             </View>
               <BlueButton
-                title="Рассчитать заново"
+                title="Розразувати ще раз"
                 onPress={() => setShowResult(false)}
               />
           </View>

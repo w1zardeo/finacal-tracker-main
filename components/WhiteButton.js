@@ -16,9 +16,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
-    width: "100%",
+    width: '80%',
     borderWidth: 1,
-    borderColor: '#0063D8'
+    borderColor: '#0063D8',
+    alignSelf: "center"
   },
   buttonText: {
     color: "#0063D8",

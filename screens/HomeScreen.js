@@ -1,55 +1,20 @@
-// import { View, StyleSheet } from "react-native";
-// import DateNavigator from "../components/DateNavigator";
-// import Incomes from "../components/Incomes";
-
-// export default function HomeScreen({ navigation }) {
-//   const date = "01.10.2024-31.10.2024";
-
-//   const handleLeftPress = () => {
-//     // логіка назад
-//   };
-
-//   const handleRightPress = () => {
-//     // логіка вперед
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <DateNavigator date={date} onLeftPress={handleLeftPress} onRightPress={handleRightPress} />
-//       <Incomes title="Доходи" data="Данних не виявлено!" text="Для того щоб тут були дані про ваш дохід, натисніть
-//           кнопку нижче, потім заповніть всі необхідні поля" buttonTitle="Внести нові дані"/>
-//       <View style={styles.spacer} />
-//       <Incomes title="Витрати" data="Данних не виявлено!" text="Для того щоб тут були дані про ваші витрати, натисніть
-//           кнопку нижче, потім заповніть всі необхідні поля" buttonTitle="Внести нові дані" onPress={() => navigation.navigate('Калькулятор')}/>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#EFF9FC',
-//     paddingVertical: 16,
-//   },
-//   spacer: {
-//     height: 20,
-//   },
-// });
-
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Text } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import DateNavigator from "../components/DateNavigator";
 import Incomes from "../components/Incomes";
 import IncomeChart from "../components/IcnomeChart";
 import IncomeModal from "../components/IncomeModal";
-import DonutChart from "../components/DonutChart"; // компонент для кругової діаграми
+import ExpenseModal from "../components/ExpenseModal";
+import DonutChart from "../components/DonutChart";
+import WhiteButton from "../components/WhiteButton";
 
 export default function HomeScreen({ navigation, route }) {
   const date = "01.10.2024 - 31.10.2024";
 
   const [modalIncomeVisible, setModalIncomeVisible] = useState(false);
+  const [modalExpenseVisible, setModalExpenseVisible] = useState(false);
+
   const [incomeData, setIncomeData] = useState([]);
-  const [expenseData, setExpenseData] = useState([]);
   const [expenseResults, setExpenseResults] = useState(null);
 
   useEffect(() => {
@@ -58,24 +23,23 @@ export default function HomeScreen({ navigation, route }) {
     }
   }, [route.params?.expenseResults]);
 
- const ukrLabels = {
-  housing: "Житло",
-  food: "Харчування",
-  entertainment: "Розваги",
-  health: "Здоров'я",
-  transport: "Транспорт",
-  family: "Сім'я",
-  other: "Інше",
-};
+  const ukrLabels = {
+    housing: "Житло",
+    food: "Харчування",
+    entertainment: "Розваги",
+    health: "Здоров'я",
+    transport: "Транспорт",
+    family: "Сім'я",
+    other: "Інше",
+  };
 
-const chartData = expenseResults
-  ? Object.entries(expenseResults).map(([key, value], index) => ({
-      label: ukrLabels[key] || key, // якщо немає перекладу, залишаємо як є
-      value,
-      color: getColor(index),
-    }))
-  : [];
-
+  const chartData = expenseResults
+    ? Object.entries(expenseResults).map(([key, value], index) => ({
+        label: ukrLabels[key] || key,
+        value,
+        color: getColor(index),
+      }))
+    : [];
 
   function getColor(index) {
     const colors = [
@@ -97,6 +61,15 @@ const chartData = expenseResults
     setIncomeData([...incomeData, newEntry]);
   };
 
+  const handleAddExpense = (newExpense) => {
+    setExpenseResults((prev) => {
+      const updated = { ...(prev || {}) };
+      updated[newExpense.category] =
+        (updated[newExpense.category] || 0) + newExpense.amount;
+      return updated;
+    });
+  };
+
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -114,7 +87,7 @@ const chartData = expenseResults
           title={incomeData.length > 0 ? "" : "Доходи"}
           data={incomeData.length > 0 ? "" : "Данних не виявлено!"}
           onPress={() => setModalIncomeVisible(true)}
-          buttonTitle={incomeData.length > 0 ? "Внести ще" : "Внести нові дані"}
+          buttonTitle="Внести нові дані"
           text={
             incomeData.length > 0
               ? ""
@@ -122,40 +95,59 @@ const chartData = expenseResults
           }
         />
 
-        <IncomeModal
-        visible={modalIncomeVisible}
-        onClose={() => setModalIncomeVisible(false)}
-        onSubmit={handleAddIncome}
-      />
+        {incomeData.length > 0 && (
+          <WhiteButton
+            title="Показати всі доходи"
+            onPress={() => navigation.navigate("IncomeDetail", { incomeData })}
+          />
+        )}
 
-        {/* Відображення діаграми витрат, якщо є дані */}
+        <IncomeModal
+          visible={modalIncomeVisible}
+          onClose={() => setModalIncomeVisible(false)}
+          onSubmit={handleAddIncome}
+        />
+
         {expenseResults && chartData.length > 0 && (
-          <>
-            <DonutChart data={chartData} />
-          </>
+          <DonutChart data={chartData} />
         )}
 
         <View style={styles.spacer} />
 
-       {expenseResults ? (
-  // Є дані з CalculatorScreen — показуємо лише кнопку для внесення нових даних
-  <Incomes
-    title=""
-    data=""
-    onPress={() => navigation.navigate("Калькулятор")}
-    buttonTitle="Внести нові дані"
-    text=""
-  />
-) : (
-  // Даних немає — показуємо інформативний блок
-  <Incomes
-    title="Витрати"
-    data="Данних не виявлено!"
-    onPress={() => navigation.navigate("Калькулятор")}
-    buttonTitle="Внести нові дані"
-    text="Для того щоб тут були дані про ваші витрати, натисніть кнопку нижче, потім заповніть всі необхідні поля"
-  />
-)}
+        {expenseResults ? (
+          <>
+            <Incomes
+              title=""
+              data=""
+              onPress={() => setModalExpenseVisible(true)}
+              buttonTitle="Внести нові дані"
+              text=""
+            />
+          </>
+        ) : (
+          <Incomes
+            title="Витрати"
+            data="Данних не виявлено!"
+            onPress={() => setModalExpenseVisible(true)}
+            buttonTitle="Внести нові дані"
+            text="Для того щоб тут були дані про ваші витрати, натисніть кнопку нижче, потім заповніть всі необхідні поля"
+          />
+        )}
+
+        {expenseResults && (
+          <WhiteButton
+            title="Показати всі витрати"
+            onPress={() =>
+              navigation.navigate("EpxenseDetail", { expenseResults })
+            }
+          />
+        )}
+
+        <ExpenseModal
+          visible={modalExpenseVisible}
+          onClose={() => setModalExpenseVisible(false)}
+          onSubmit={handleAddExpense}
+        />
       </View>
     </ScrollView>
   );
@@ -168,7 +160,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   spacer: {
-    height: 20,
+    height: 10,
   },
   expenseTitle: {
     fontSize: 18,

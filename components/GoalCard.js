@@ -1,61 +1,3 @@
-// import { View, Text, StyleSheet, Image } from "react-native";
-
-// function GoalCard({ goal }) {
-//   const monthlyPayment = (parseFloat(goal.amount) / parseFloat(goal.term)).toFixed(0);
-//   return (
-//     <View style={styles.card}>
-//       <Image source={{ uri: goal.imageUri }} style={styles.image} />
-//       <View style={styles.info}>
-//         <Text style={styles.title}>На {goal.title}</Text>
-//         <Text>Сума виконання цілі: {parseInt(goal.amount).toLocaleString()}</Text>
-//         <Text>Строк цілі: {goal.term} місяців</Text>
-//         <Text>Щомісячний платіж: {monthlyPayment}</Text>
-//         <Text>Статус виконання цілі: {goal.progress}%</Text>
-//         <View style={styles.progressBar}>
-//           <View style={[styles.progressFill, { width: `${goal.progress}%` }]} />
-//         </View>
-//       </View>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   card: {
-//     backgroundColor: "white",
-//     margin: 12,
-//     borderRadius: 10,
-//     overflow: "hidden",
-//     flexDirection: "row",
-//     elevation: 2,
-//   },
-//   image: {
-//     width: 100,
-//     height: 100,
-//   },
-//   info: {
-//     padding: 10,
-//     flex: 1,
-//   },
-//   title: {
-//     fontWeight: "bold",
-//     marginBottom: 4,
-//   },
-//   progressBar: {
-//     height: 6,
-//     backgroundColor: "#eee",
-//     borderRadius: 3,
-//     marginTop: 6,
-//   },
-//   progressFill: {
-//     height: 6,
-//     backgroundColor: "#007BFF",
-//     borderRadius: 3,
-//   },
-// });
-
-// export default GoalCard;
-
-// GoalCard.js
 import { View, Text, StyleSheet, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -68,6 +10,11 @@ function GoalCard({ goal, onDelete, onEdit }) {
     parseFloat(goal.amount) / parseFloat(goal.term)
   ).toFixed(0);
 
+  // Обчислення прогресу (якщо дані збережені як paidAmount або progress)
+  const progress = goal.paidAmount
+    ? Math.min((goal.paidAmount / goal.amount) * 100, 100).toFixed(0)
+    : goal.progress || 0;
+
   return (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -77,18 +24,18 @@ function GoalCard({ goal, onDelete, onEdit }) {
           <Image source={{ uri: goal.imageUri }} style={styles.image} />
         </TouchableOpacity>
         <View style={styles.info}>
-          <Text style={styles.title}>На {goal.title}</Text>
+          <Text style={styles.title}>{goal.title}</Text>
           <Text style={styles.text}>
             Сума виконання цілі: {parseInt(goal.amount).toLocaleString()}
           </Text>
           <Text style={styles.text}>Строк цілі: {goal.term} місяців</Text>
           <Text style={styles.text}>Щомісячний платіж: {monthlyPayment}</Text>
           <Text style={styles.text}>
-            Статус виконання цілі: {goal.progress}%
+            Статус виконання цілі: {progress}%
           </Text>
           <View style={styles.progressBar}>
             <View
-              style={[styles.progressFill, { width: `${goal.progress}%` }]}
+              style={[styles.progressFill, { width: `${progress}%` }]}
             />
           </View>
         </View>
