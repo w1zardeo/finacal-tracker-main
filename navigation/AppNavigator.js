@@ -23,7 +23,22 @@ function AppNavigator() {
       <Stack.Screen
         name="GoalDetails"
         component={GoalDetailScreen}
-        options={{ title: "Ціль" }}
+        options={({ navigation }) => ({
+          title: "Ціль",
+          headerStyle: {
+            backgroundColor: "#007AFF",
+          },
+          headerTintColor: "#fff",
+          headerLeft: () => (
+            <Ionicons
+              name="arrow-back-outline"
+              size={24}
+              color="#fff"
+              style={{ marginLeft: 15 }}
+              onPress={() => navigation.goBack("HomeScreen")} // або 'HomeScreen' залежно від назви
+            />
+          ),
+        })}
       />
       <Stack.Screen
         name="IncomeDetail"

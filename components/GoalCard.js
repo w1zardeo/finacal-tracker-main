@@ -1,19 +1,48 @@
-import { View, Text, StyleSheet, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { TouchableOpacity } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function GoalCard({ goal, onDelete, onEdit }) {
   const navigation = useNavigation();
 
+  const [paidAmount, setPaidAmount] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  const storageKey = `payments_${goal.id}`;
+
+  useEffect(() => {
+    // Завантаження платежів для цієї цілі
+    const loadPayments = async () => {
+      try {
+        const savedPayments = await AsyncStorage.getItem(storageKey);
+        if (savedPayments) {
+          const parsed = JSON.parse(savedPayments);
+          const totalPaid = parsed.reduce((sum, p) => sum + Number(p.amount), 0);
+          setPaidAmount(totalPaid);
+
+          const target = parseFloat(goal.amount || goal.targetAmount || 0);
+          if (target > 0) {
+            setProgress(Math.min((totalPaid / target) * 100, 100).toFixed(0));
+          } else {
+            setProgress(0);
+          }
+        } else {
+          setPaidAmount(0);
+          setProgress(0);
+        }
+      } catch (error) {
+        console.error("Error loading payments in GoalCard:", error);
+      }
+    };
+
+    loadPayments();
+  }, [goal.id, goal.amount, goal.targetAmount]);
+
   const monthlyPayment = (
     parseFloat(goal.amount) / parseFloat(goal.term)
   ).toFixed(0);
-
-  // Обчислення прогресу (якщо дані збережені як paidAmount або progress)
-  const progress = goal.paidAmount
-    ? Math.min((goal.paidAmount / goal.amount) * 100, 100).toFixed(0)
-    : goal.progress || 0;
 
   return (
     <View style={styles.card}>
@@ -30,13 +59,9 @@ function GoalCard({ goal, onDelete, onEdit }) {
           </Text>
           <Text style={styles.text}>Строк цілі: {goal.term} місяців</Text>
           <Text style={styles.text}>Щомісячний платіж: {monthlyPayment}</Text>
-          <Text style={styles.text}>
-            Статус виконання цілі: {progress}%
-          </Text>
+          <Text style={styles.text}>Статус виконання цілі: {progress}%</Text>
           <View style={styles.progressBar}>
-            <View
-              style={[styles.progressFill, { width: `${progress}%` }]}
-            />
+            <View style={[styles.progressFill, { width: `${progress}%` }]} />
           </View>
         </View>
         <View style={styles.actions}>
