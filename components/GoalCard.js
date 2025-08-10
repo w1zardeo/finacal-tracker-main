@@ -1,44 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function GoalCard({ goal, onDelete, onEdit }) {
   const navigation = useNavigation();
-
   const [paidAmount, setPaidAmount] = useState(0);
   const [progress, setProgress] = useState(0);
 
   const storageKey = `payments_${goal.id}`;
 
-  useEffect(() => {
-    // Завантаження платежів для цієї цілі
-    const loadPayments = async () => {
-      try {
-        const savedPayments = await AsyncStorage.getItem(storageKey);
-        if (savedPayments) {
-          const parsed = JSON.parse(savedPayments);
-          const totalPaid = parsed.reduce((sum, p) => sum + Number(p.amount), 0);
-          setPaidAmount(totalPaid);
+  const loadPayments = async () => {
+    try {
+      const savedPayments = await AsyncStorage.getItem(storageKey);
+      if (savedPayments) {
+        const parsed = JSON.parse(savedPayments);
+        const totalPaid = parsed.reduce((sum, p) => sum + Number(p.amount), 0);
+        setPaidAmount(totalPaid);
 
-          const target = parseFloat(goal.amount || goal.targetAmount || 0);
-          if (target > 0) {
-            setProgress(Math.min((totalPaid / target) * 100, 100).toFixed(0));
-          } else {
-            setProgress(0);
-          }
+        const target = parseFloat(goal.amount || goal.targetAmount || 0);
+        if (target > 0) {
+          setProgress(Math.min((totalPaid / target) * 100, 100).toFixed(0));
         } else {
-          setPaidAmount(0);
           setProgress(0);
         }
-      } catch (error) {
-        console.error("Error loading payments in GoalCard:", error);
+      } else {
+        setPaidAmount(0);
+        setProgress(0);
       }
-    };
+    } catch (error) {
+      console.error("Error loading payments in GoalCard:", error);
+    }
+  };
 
-    loadPayments();
-  }, [goal.id, goal.amount, goal.targetAmount]);
+  // Викликаємо при кожному фокусі на екран
+  useFocusEffect(
+    useCallback(() => {
+      loadPayments();
+    }, [goal.id, goal.amount, goal.targetAmount])
+  );
 
   const monthlyPayment = (
     parseFloat(goal.amount) / parseFloat(goal.term)
@@ -60,6 +61,8 @@ function GoalCard({ goal, onDelete, onEdit }) {
           <Text style={styles.text}>Строк цілі: {goal.term} місяців</Text>
           <Text style={styles.text}>Щомісячний платіж: {monthlyPayment}</Text>
           <Text style={styles.text}>Статус виконання цілі: {progress}%</Text>
+
+          {/* Прогрес-бар */}
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${progress}%` }]} />
           </View>
@@ -122,15 +125,15 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   progressBar: {
-    height: 6,
+    height: 8,
     backgroundColor: "#E0E0E0",
-    borderRadius: 3,
+    borderRadius: 4,
+    overflow: "hidden",
     marginTop: 6,
   },
   progressFill: {
-    height: 6,
+    height: 8,
     backgroundColor: "#007BFF",
-    borderRadius: 3,
   },
   actions: {
     justifyContent: "space-between",
