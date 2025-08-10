@@ -8,7 +8,8 @@ const expenseSlice = createSlice({
   name: "expense",
   initialState,
   reducers: {
-    addExpense(state, action) {
+     addExpense(state, action) {
+      if (!state.expenses) state.expenses = [];
       state.expenses.push(action.payload);
     },
     editExpense(state, action) {

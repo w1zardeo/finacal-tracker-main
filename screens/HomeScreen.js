@@ -193,8 +193,8 @@ import { addExpense } from "../store/expenseSlice";
 export default function HomeScreen({ navigation }) {
   const date = "01.10.2024 - 31.10.2024";
 
-  const incomes = useSelector((state) => state.income.incomes);
-  const expenses = useSelector((state) => state.expense.expenses);
+  const incomes = useSelector((state) => state.income?.incomes ?? []);
+  const expenses = useSelector((state) => state.expense?.expenses ?? []);
   const dispatch = useDispatch();
 
   const [modalIncomeVisible, setModalIncomeVisible] = React.useState(false);
@@ -224,10 +224,10 @@ export default function HomeScreen({ navigation }) {
     return colors[index % colors.length];
   };
 
-  const expenseResults = expenses.reduce((acc, curr) => {
-    acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
-    return acc;
-  }, {});
+const expenseResults = expenses.reduce((acc, curr) => {
+  acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
+  return acc;
+}, {});
 
   const chartData = Object.entries(expenseResults).map(([key, value], index) => ({
     label: ukrLabels[key] || key,

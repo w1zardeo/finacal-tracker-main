@@ -8,7 +8,8 @@ const incomeSlice = createSlice({
   name: "income",
   initialState,
   reducers: {
-    addIncome(state, action) {
+     addIncome(state, action) {
+      if (!state.incomes) state.incomes = [];
       state.incomes.push(action.payload);
     },
     editIncome(state, action) {

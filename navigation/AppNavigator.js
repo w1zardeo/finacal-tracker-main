@@ -5,13 +5,15 @@ import IncomeDetailScreen from "../components/IcnomeDetailScreen";
 import ExpenseDetailScreen from "../components/ExpenseDetailScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { Provider } from "react-redux";
-import { store } from "../store/store";
+import { PersistGate } from "redux-persist/integration/react";
+import { store, persistor } from "../store/store";
 
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
   return (
     <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
     <Stack.Navigator
       screenOptions={{
         // Колір фону для всіх екранів
@@ -84,6 +86,7 @@ function AppNavigator() {
         })}
       />
     </Stack.Navigator>
+    </PersistGate>
     </Provider>
   );
 }

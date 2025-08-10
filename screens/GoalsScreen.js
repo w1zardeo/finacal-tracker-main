@@ -1,17 +1,22 @@
-// export default GoalsScreen;
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView } from "react-native";
 import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+
 import AddGoalModal from "../components/AddGoalModal";
 import GoalCard from "../components/GoalCard";
 import Incomes from "../components/Incomes";
 
+import { addGoal, editGoal, deleteGoal } from "../store/goalsSlice";
+
 function GoalsScreen() {
+  const dispatch = useDispatch();
+  const goals = useSelector((state) => state.goals.goals);
+
   const [modalVisible, setModalVisible] = useState(false);
-  const [goals, setGoals] = useState([]);
   const [editingGoal, setEditingGoal] = useState(null);
 
   const handleDeleteGoal = (goalId) => {
-    setGoals((prevGoals) => prevGoals.filter((goal) => goal.id !== goalId));
+    dispatch(deleteGoal(goalId));
   };
 
   const handleEditGoal = (goalToEdit) => {
@@ -21,12 +26,10 @@ function GoalsScreen() {
 
   const handleSaveGoal = (goal) => {
     if (editingGoal) {
-      setGoals((prevGoals) =>
-        prevGoals.map((g) => (g.id === goal.id ? goal : g))
-      );
+      dispatch(editGoal(goal));
       setEditingGoal(null);
     } else {
-      setGoals((prevGoals) => [...prevGoals, goal]);
+      dispatch(addGoal(goal));
     }
     setModalVisible(false);
   };

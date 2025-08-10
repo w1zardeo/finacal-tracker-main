@@ -1,67 +1,52 @@
-import { View, Text, StyleSheet, Image, Pressable, Modal } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Pressable,
+  Modal,
+} from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SwipeListView } from "react-native-swipe-list-view";
 import PaymentModal from "../components/PaymentModal";
 import { Ionicons } from "@expo/vector-icons";
+
+import { useSelector, useDispatch } from "react-redux";
+import {
+  addPayment,
+  editPayment,
+  deletePayment,
+} from "../store/paymentsSlice";
 
 export default function GoalDetailsScreen() {
   const route = useRoute();
   const { goal } = route.params;
 
+  const dispatch = useDispatch();
+
+  const payments = useSelector(
+    (state) => state.payments.paymentsByGoal?.[goal.id] || []
+  );
+
   const [modalVisible, setModalVisible] = useState(false);
-  const [payments, setPayments] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [editingPayment, setEditingPayment] = useState(null);
 
-  const storageKey = `payments_${goal.id}`;
+  // Обчислюємо total та progress
+  const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const target = parseFloat(goal.amount || goal.targetAmount || 0);
+  const progress = target > 0 ? Math.min((total / target) * 100, 100).toFixed(0) : 0;
 
-  // 1. Завантаження збережених платежів
-  useEffect(() => {
-    loadPayments();
-  }, []);
-
-  const loadPayments = async () => {
-    try {
-      const savedPayments = await AsyncStorage.getItem(storageKey);
-      if (savedPayments) {
-        const parsed = JSON.parse(savedPayments);
-        setPayments(parsed);
-        setTotal(parsed.reduce((sum, p) => sum + Number(p.amount) || 0, 0));
-      }
-    } catch (error) {
-      console.error("Error loading payments:", error);
-    }
-  };
-
-  // 2. Автоматичний підрахунок прогресу
-  useEffect(() => {
-    const target = parseFloat(goal.amount || goal.targetAmount || 0);
-    if (target > 0) {
-      setProgress(Math.min((total / target) * 100, 100).toFixed(0));
-    } else {
-      setProgress(0);
-    }
-  }, [total, goal.amount, goal.targetAmount]);
-
-  // 3. Збереження в AsyncStorage
-  const savePayments = async (updatedPayments) => {
-    setPayments(updatedPayments);
-    setTotal(updatedPayments.reduce((sum, p) => sum + Number(p.amount) || 0, 0));
-    await AsyncStorage.setItem(storageKey, JSON.stringify(updatedPayments));
-  };
-
-  // 4. Додавання/редагування платежів
   const handleAddOrEditPayment = (amount) => {
     if (!amount || isNaN(amount) || Number(amount) <= 0) return;
 
     if (editingPayment) {
-      const updatedPayments = payments.map((p) =>
-        p.id === editingPayment.id ? { ...p, amount: Number(amount) } : p
+      dispatch(
+        editPayment({
+          goalId: goal.id,
+          payment: { ...editingPayment, amount: Number(amount) },
+        })
       );
-      savePayments(updatedPayments);
       setEditingPayment(null);
     } else {
       const newPayment = {
@@ -69,16 +54,14 @@ export default function GoalDetailsScreen() {
         amount: Number(amount),
         date: new Date().toLocaleString(),
       };
-      savePayments([...payments, newPayment]);
+      dispatch(addPayment({ goalId: goal.id, payment: newPayment }));
     }
 
     setModalVisible(false);
   };
 
-  // 5. Видалення
   const handleDeletePayment = (id) => {
-    const filtered = payments.filter((p) => p.id !== id);
-    savePayments(filtered);
+    dispatch(deletePayment({ goalId: goal.id, paymentId: id }));
   };
 
   const openEditModal = (payment) => {
@@ -118,7 +101,9 @@ export default function GoalDetailsScreen() {
         renderItem={({ item }) => (
           <View style={styles.paymentItem}>
             <Text style={{ fontSize: 12 }}>{item.date}</Text>
-            <Text style={{ color: "green", fontWeight: "bold", marginLeft: "auto" }}>
+            <Text
+              style={{ color: "green", fontWeight: "bold", marginLeft: "auto" }}
+            >
               + {item.amount}
             </Text>
           </View>

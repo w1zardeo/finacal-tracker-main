@@ -1,45 +1,21 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 
 function GoalCard({ goal, onDelete, onEdit }) {
   const navigation = useNavigation();
-  const [paidAmount, setPaidAmount] = useState(0);
-  const [progress, setProgress] = useState(0);
 
-  const storageKey = `payments_${goal.id}`;
-
-  const loadPayments = async () => {
-    try {
-      const savedPayments = await AsyncStorage.getItem(storageKey);
-      if (savedPayments) {
-        const parsed = JSON.parse(savedPayments);
-        const totalPaid = parsed.reduce((sum, p) => sum + Number(p.amount), 0);
-        setPaidAmount(totalPaid);
-
-        const target = parseFloat(goal.amount || goal.targetAmount || 0);
-        if (target > 0) {
-          setProgress(Math.min((totalPaid / target) * 100, 100).toFixed(0));
-        } else {
-          setProgress(0);
-        }
-      } else {
-        setPaidAmount(0);
-        setProgress(0);
-      }
-    } catch (error) {
-      console.error("Error loading payments in GoalCard:", error);
-    }
-  };
-
-  // Викликаємо при кожному фокусі на екран
-  useFocusEffect(
-    useCallback(() => {
-      loadPayments();
-    }, [goal.id, goal.amount, goal.targetAmount])
+  // Вибираємо платежі з Redux за goal.id
+  const payments = useSelector(
+    (state) => state.payments.paymentsByGoal?.[goal.id] || []
   );
+
+  // Обчислюємо суму сплаченого і прогрес
+  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const target = parseFloat(goal.amount || goal.targetAmount || 0);
+  const progress = target > 0 ? Math.min((totalPaid / target) * 100, 100).toFixed(0) : 0;
 
   const monthlyPayment = (
     parseFloat(goal.amount) / parseFloat(goal.term)
