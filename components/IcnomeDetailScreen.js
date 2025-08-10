@@ -12,43 +12,43 @@ import IncomeChart from "../components/IcnomeChart";
 import BlueButton from "../components/BlueButton";
 import IncomeModal from "../components/IncomeModal";
 
-export default function IncomeDetailScreen({ route }) {
-  const { incomeData: initialIncomeData = [] } = route.params || {};
-  const [incomeData, setIncomeData] = useState(initialIncomeData);
+import { useSelector, useDispatch } from "react-redux";
+import { addIncome, editIncome, deleteIncome } from "../store/incomeSlice";
+
+export default function IncomeDetailScreen() {
+  const incomes = useSelector((state) => state.income.incomes);
+  const dispatch = useDispatch();
+
   const [searchText, setSearchText] = useState("");
   const [modalIncomeVisible, setModalIncomeVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState(null); // Для редагування
+  const [editingItem, setEditingItem] = useState(null);
 
   const handleAddIncome = (newEntry) => {
     if (editingItem) {
-      // Оновлюємо існуючий елемент
-      setIncomeData((prev) =>
-        prev.map((item, idx) =>
-          idx === editingItem.index ? { ...item, ...newEntry } : item
-        )
-      );
+      dispatch(editIncome({ ...editingItem, ...newEntry }));
       setEditingItem(null);
     } else {
-      setIncomeData((prev) => [...prev, newEntry]);
+      dispatch(addIncome({ ...newEntry, id: Date.now().toString() }));
     }
+    setModalIncomeVisible(false);
   };
 
-  const handleDelete = (index) => {
-    setIncomeData((prev) => prev.filter((_, i) => i !== index));
+  const handleDelete = (id) => {
+    dispatch(deleteIncome(id));
   };
 
-  const openEditModal = (item, index) => {
-    setEditingItem({ ...item, index });
+  const openEditModal = (item) => {
+    setEditingItem(item);
     setModalIncomeVisible(true);
   };
 
-  const filteredData = incomeData.filter((item) =>
+  const filteredData = incomes.filter((item) =>
     item.name?.toLowerCase().includes(searchText.toLowerCase())
   );
 
   return (
     <View style={styles.container}>
-      {incomeData.length > 0 && <IncomeChart data={incomeData} />}
+      {incomes.length > 0 && <IncomeChart data={incomes} />}
 
       <BlueButton
         title="Внести нові дані"
@@ -88,7 +88,7 @@ export default function IncomeDetailScreen({ route }) {
 
       <SwipeListView
         data={filteredData}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.historyItem}>
             <View>
@@ -100,17 +100,17 @@ export default function IncomeDetailScreen({ route }) {
             <Text style={styles.amount}>+ {item.amount.toLocaleString()} ₴</Text>
           </View>
         )}
-        renderHiddenItem={({ item, index }) => (
+        renderHiddenItem={({ item }) => (
           <View style={styles.rowBack}>
             <TouchableOpacity
               style={[styles.backRightBtn, styles.backRightBtnLeft]}
-              onPress={() => openEditModal(item, index)}
+              onPress={() => openEditModal(item)}
             >
               <Ionicons name="create-outline" size={24} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.backRightBtn, styles.backRightBtnRight]}
-              onPress={() => handleDelete(index)}
+              onPress={() => handleDelete(item.id)}
             >
               <Ionicons name="trash-outline" size={24} color="#fff" />
             </TouchableOpacity>

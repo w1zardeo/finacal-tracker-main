@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   View,
@@ -8,7 +8,9 @@ import {
   Pressable,
   TouchableOpacity,
   FlatList,
+  Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 
 const categories = [
@@ -18,21 +20,59 @@ const categories = [
   { label: "Дод. розходи", value: "other" },
 ];
 
-export default function ExpenseModal({ visible, onClose, onSubmit }) {
-  const [date] = useState(new Date().toLocaleDateString("uk-UA"));
-  const [category, setCategory] = useState("");
-  const [amount, setAmount] = useState("");
-  const [comment, setComment] = useState("");
+export default function ExpenseModal({
+  visible,
+  onClose,
+  onSubmit,
+  initialCategory = "",
+  initialAmount = "",
+  initialComment = "",
+  initialDate = "",
+}) {
+  const parseDate = (dateStr) => {
+    const d = new Date(dateStr);
+    return isNaN(d) ? new Date() : d;
+  };
+
+  const [date, setDate] = useState(parseDate(initialDate));
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
+  const [category, setCategory] = useState(initialCategory);
+  const [amount, setAmount] = useState(initialAmount.toString());
+  const [comment, setComment] = useState(initialComment);
+
+  useEffect(() => {
+    setDate(parseDate(initialDate));
+    setCategory(initialCategory);
+    setAmount(initialAmount.toString());
+    setComment(initialComment);
+  }, [initialDate, initialCategory, initialAmount, initialComment]);
 
   const handleSave = () => {
-    if (category && parseFloat(amount) > 0) {
-      onSubmit({ category, amount: parseFloat(amount) });
-      setCategory("");
-      setAmount("");
-      setComment("");
-      onClose();
-    }
+    if (!category || !amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0)
+      return;
+
+    const formattedDate = date.toLocaleDateString("uk-UA");
+    const formattedTime = date.toLocaleTimeString("uk-UA", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    onSubmit({
+      category,
+      amount: parseFloat(amount),
+      comment,
+      date: formattedDate,
+      time: formattedTime,
+      day: date.getDate(),
+    });
+
+    setCategory("");
+    setAmount("");
+    setComment("");
+    setDate(new Date());
+
+    onClose();
   };
 
   const handleCategorySelect = (selected) => {
@@ -41,68 +81,81 @@ export default function ExpenseModal({ visible, onClose, onSubmit }) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          {/* Header */}
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.overlay}>
+        <View style={styles.modal}>
           <View style={styles.headerRow}>
-            <Text style={styles.modalTitle}>Внесення даних про розходи</Text>
+            <Text style={styles.title}>Внесення даних про розходи</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
 
-          {/* Date */}
-          <Text style={styles.label}>Вкажіть дату</Text>
-          <TextInput style={styles.input} value={date} editable={false} />
+          {/* Категорія */}
+          <Text style={styles.label}>Категорія</Text>
+          <Pressable
+            style={styles.input}
+            onPress={() => setCategoryMenuVisible(true)}
+          >
+            <Text style={{ color: category ? "#000" : "#aaa" }}>
+              {categories.find((c) => c.value === category)?.label || "Оберіть категорію"}
+            </Text>
+          </Pressable>
 
-          {/* Category & Amount */}
-          <View style={styles.row}>
-            <View style={{ flex: 1, marginRight: 4 }}>
-              <Text style={styles.label}>Виберіть категорію</Text>
-              <Pressable
-                style={styles.input}
-                onPress={() => setCategoryMenuVisible(true)}
-              >
-                <Text style={{ color: category ? "#000" : "#aaa" }}>
-                  {category
-                    ? categories.find((c) => c.value === category)?.label
-                    : "Категорія"}
-                </Text>
-              </Pressable>
-            </View>
-            <View style={{ flex: 1, marginLeft: 4 }}>
-              <Text style={styles.label}>Сума розходу</Text>
-              <TextInput
-                style={styles.input}
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
+          {/* Сума */}
+          <Text style={styles.label}>Сума розходу</Text>
+          <TextInput
+            style={styles.input}
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+            placeholder="0.00"
+          />
 
-          {/* Comment */}
-          <Text style={styles.label}>Ваш коментар</Text>
+          {/* Коментар */}
+          <Text style={styles.label}>Коментар</Text>
           <TextInput
             style={styles.commentInput}
             value={comment}
             onChangeText={setComment}
             multiline
+            placeholder="Ваш коментар"
           />
 
-          {/* Buttons */}
-          <Pressable style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Внести дані</Text>
+          {/* Дата */}
+          <Text style={styles.label}>Дата</Text>
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            style={styles.dateInput}
+          >
+            <Text>{date.toLocaleDateString("uk-UA")}</Text>
+            <Ionicons name="calendar-outline" size={20} color="#666" />
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) setDate(selectedDate);
+              }}
+            />
+          )}
+
+          {/* Кнопки */}
+          <Pressable style={styles.submitButton} onPress={handleSave}>
+            <Text style={styles.submitButtonText}>Внести дані</Text>
           </Pressable>
 
           <Pressable onPress={onClose}>
-            <Text style={styles.cancelButtonText}>Відмінити</Text>
+            <Text style={styles.cancelText}>Скасувати</Text>
           </Pressable>
         </View>
       </View>
 
-      {/* Custom Category Menu */}
+      {/* Меню вибору категорії */}
       <Modal visible={categoryMenuVisible} transparent animationType="fade">
         <Pressable
           style={styles.menuOverlay}
@@ -129,17 +182,17 @@ export default function ExpenseModal({ visible, onClose, onSubmit }) {
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
+    paddingHorizontal: 20,
   },
-  modalContainer: {
-    width: "90%",
+  modal: {
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 20,
+    elevation: 10,
   },
   headerRow: {
     flexDirection: "row",
@@ -147,51 +200,60 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  modalTitle: {
-    fontSize: 16,
+  title: {
+    fontSize: 18,
     fontWeight: "600",
-    color: "#000",
+    textAlign: "center",
+    flex: 1,
   },
   label: {
     fontSize: 14,
-    fontWeight: "400",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D1D1D6",
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 12,
-    justifyContent: "center",
-  },
-  row: {
-    flexDirection: "row",
-    marginBottom: 12,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 20,
+    backgroundColor: "#fff",
   },
   commentInput: {
     borderWidth: 1,
-    borderColor: "#D1D1D6",
-    borderRadius: 8,
-    padding: 8,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    padding: 12,
     height: 60,
     marginBottom: 20,
+    backgroundColor: "#fff",
   },
-  saveButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 12,
-    borderRadius: 8,
+  dateInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  submitButton: {
+    backgroundColor: "#0066FF",
+    padding: 14,
+    borderRadius: 6,
     alignItems: "center",
     marginBottom: 12,
   },
-  saveButtonText: {
+  submitButtonText: {
     color: "#fff",
-    fontWeight: "600",
+    fontWeight: "bold",
+    fontSize: 16,
   },
-  cancelButtonText: {
-    color: "red",
-    fontWeight: "600",
+  cancelText: {
+    color: "#ff3333",
     textAlign: "center",
+    fontSize: 15,
   },
   menuOverlay: {
     flex: 1,

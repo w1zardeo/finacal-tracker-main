@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,16 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DonutChart from "../components/DonutChart";
-import BlueButton from "./BlueButton";
+import BlueButton from "../components/BlueButton";
 import ExpenseModal from "../components/ExpenseModal";
 import { SwipeListView } from "react-native-swipe-list-view";
 
-export default function ExpenseDetailScreen({ route }) {
-  const { expenseResults = {} } = route.params || {};
+import { useSelector, useDispatch } from "react-redux";
+import { addExpense, editExpense, deleteExpense } from "../store/expenseSlice";
+
+export default function ExpenseDetailScreen() {
+  const expenses = useSelector((state) => state.expense.expenses);
+  const dispatch = useDispatch();
 
   const ukrLabels = {
     housing: "Житло",
@@ -21,34 +25,14 @@ export default function ExpenseDetailScreen({ route }) {
     entertainment: "Розваги",
     health: "Здоров'я",
     transport: "Транспорт",
-    
     family: "Сім'я",
     other: "Інше",
   };
-
-  const [localExpenseData, setLocalExpenseData] = useState([]);
-
-  useEffect(() => {
-    if (expenseResults && Object.keys(expenseResults).length > 0) {
-      setLocalExpenseData(
-        Object.entries(expenseResults).map(([category, amount]) => ({
-          id: Math.random().toString(),
-          category,
-          amount,
-          comment: "",
-          date: new Date().toLocaleDateString("uk-UA"),
-        }))
-      );
-    } else {
-      setLocalExpenseData([]);
-    }
-  }, [expenseResults]);
 
   const [searchText, setSearchText] = useState("");
   const [modalExpenseVisible, setModalExpenseVisible] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
-  // Групуємо для графіка
   const getColor = (index) => {
     const colors = [
       "#FF6384",
@@ -62,61 +46,43 @@ export default function ExpenseDetailScreen({ route }) {
     return colors[index % colors.length];
   };
 
-  const groupedExpenses = localExpenseData.reduce((acc, curr) => {
-    if (!acc[curr.category]) acc[curr.category] = 0;
-    acc[curr.category] += curr.amount;
+  // Групуємо витрати для графіка
+  const expenseResults = expenses.reduce((acc, curr) => {
+    acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
     return acc;
   }, {});
 
-  const chartData = Object.entries(groupedExpenses).map(
-    ([key, value], index) => ({
-      label: ukrLabels[key] || key,
-      value,
-      color: getColor(index),
-    })
-  );
+  const chartData = Object.entries(expenseResults).map(([key, value], index) => ({
+    label: ukrLabels[key] || key,
+    value,
+    color: getColor(index),
+  }));
 
-  // Фільтрація
-  const filteredData = localExpenseData.filter((item) =>
+  const filteredData = expenses.filter((item) =>
     (ukrLabels[item.category] || item.category)
       .toLowerCase()
       .includes(searchText.toLowerCase())
   );
 
-  // Додавання або оновлення даних з ExpenseModal
   const handleSaveExpense = (expense) => {
     if (editingItem) {
-      // Оновлюємо існуючий елемент
-      setLocalExpenseData((prev) =>
-        prev.map((item) =>
-          item.id === editingItem.id ? { ...item, ...expense } : item
-        )
-      );
+      dispatch(editExpense({ ...editingItem, ...expense }));
     } else {
-      // Додаємо новий елемент
-      const newEntry = {
-        ...expense,
-        id: Math.random().toString(),
-        date: expense.date || new Date().toLocaleDateString("uk-UA"),
-      };
-      setLocalExpenseData((prev) => [...prev, newEntry]);
+      dispatch(addExpense({ ...expense, id: Date.now().toString() }));
     }
     setModalExpenseVisible(false);
     setEditingItem(null);
   };
 
-  // Видалення елемента
   const handleDelete = (id) => {
-    setLocalExpenseData((prev) => prev.filter((item) => item.id !== id));
+    dispatch(deleteExpense(id));
   };
 
-  // Відкриття модалки редагування
   const openEditModal = (item) => {
     setEditingItem(item);
     setModalExpenseVisible(true);
   };
 
-  // Відкриття модалки додавання
   const openAddModal = () => {
     setEditingItem(null);
     setModalExpenseVisible(true);

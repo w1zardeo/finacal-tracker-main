@@ -4,11 +4,14 @@ import GoalDetailScreen from "../components/GoalDetailScreen";
 import IncomeDetailScreen from "../components/IcnomeDetailScreen";
 import ExpenseDetailScreen from "../components/ExpenseDetailScreen";
 import { Ionicons } from "@expo/vector-icons";
+import { Provider } from "react-redux";
+import { store } from "../store/store";
 
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
   return (
+    <Provider store={store}>
     <Stack.Navigator
       screenOptions={{
         // Колір фону для всіх екранів
@@ -81,6 +84,7 @@ function AppNavigator() {
         })}
       />
     </Stack.Navigator>
+    </Provider>
   );
 }
 

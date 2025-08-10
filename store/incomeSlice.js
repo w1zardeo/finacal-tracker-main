@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  items: [], // { name, date, time, amount, day }
+  incomes: [],
 };
 
 const incomeSlice = createSlice({
@@ -9,21 +9,17 @@ const incomeSlice = createSlice({
   initialState,
   reducers: {
     addIncome(state, action) {
-      state.items.push(action.payload);
+      state.incomes.push(action.payload);
     },
-    removeIncome(state, action) {
-      const idx = action.payload;
-      state.items = state.items.filter((_, i) => i !== idx);
+    editIncome(state, action) {
+      const idx = state.incomes.findIndex((i) => i.id === action.payload.id);
+      if (idx !== -1) state.incomes[idx] = action.payload;
     },
-    setIncomes(state, action) {
-      state.items = action.payload;
-    },
-    clearIncomes(state) {
-      state.items = [];
+    deleteIncome(state, action) {
+      state.incomes = state.incomes.filter((i) => i.id !== action.payload);
     },
   },
 });
 
-export const { addIncome, removeIncome, setIncomes, clearIncomes } =
-  incomeSlice.actions;
+export const { addIncome, editIncome, deleteIncome } = incomeSlice.actions;
 export default incomeSlice.reducer;

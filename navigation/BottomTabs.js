@@ -16,7 +16,6 @@ const BottomTabs = createBottomTabNavigator();
 
 function BottomTabsNavigator({ navigation }) {
   return (
-    <Provider store={store}>
       <BottomTabs.Navigator
         screenOptions={{
           headerStyle: { backgroundColor: GlobalStyles.colors.header },
@@ -76,7 +75,6 @@ function BottomTabsNavigator({ navigation }) {
           }}
         />
       </BottomTabs.Navigator>
-    </Provider>
   );
 }
 
