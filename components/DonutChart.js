@@ -119,7 +119,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginVertical: 16,
-    marginHorizontal: 20,
     alignItems: "center",
     elevation: 3,
   },

@@ -11,7 +11,7 @@ export default function WhiteButton({ title, onPress, style = {} }) {
 
 const styles = StyleSheet.create({
   button: {
-    marginTop: 20,
+    marginBottom: 20,
     backgroundColor: "#FFFFFF",
     paddingVertical: 12,
     borderRadius: 10,

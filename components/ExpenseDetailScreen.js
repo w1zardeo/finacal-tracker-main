@@ -21,21 +21,28 @@ export default function ExpenseDetailScreen({ route }) {
     entertainment: "Розваги",
     health: "Здоров'я",
     transport: "Транспорт",
+    
     family: "Сім'я",
     other: "Інше",
   };
 
-  const [localExpenseData, setLocalExpenseData] = useState(
-    expenseResults
-      ? Object.entries(expenseResults).map(([category, amount]) => ({
-          id: Math.random().toString(), // додаємо унікальний id
+  const [localExpenseData, setLocalExpenseData] = useState([]);
+
+  useEffect(() => {
+    if (expenseResults && Object.keys(expenseResults).length > 0) {
+      setLocalExpenseData(
+        Object.entries(expenseResults).map(([category, amount]) => ({
+          id: Math.random().toString(),
           category,
           amount,
           comment: "",
           date: new Date().toLocaleDateString("uk-UA"),
         }))
-      : []
-  );
+      );
+    } else {
+      setLocalExpenseData([]);
+    }
+  }, [expenseResults]);
 
   const [searchText, setSearchText] = useState("");
   const [modalExpenseVisible, setModalExpenseVisible] = useState(false);

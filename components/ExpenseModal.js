@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   View,
@@ -18,37 +18,19 @@ const categories = [
   { label: "Дод. розходи", value: "other" },
 ];
 
-export default function ExpenseModal({
-  visible,
-  onClose,
-  onSubmit,
-  initialCategory = "",
-  initialAmount = "",
-  initialComment = "",
-  initialDate = new Date().toLocaleDateString("uk-UA"),
-}) {
-  const [date, setDate] = useState(initialDate);
-  const [category, setCategory] = useState(initialCategory);
-  const [amount, setAmount] = useState(initialAmount.toString());
-  const [comment, setComment] = useState(initialComment);
+export default function ExpenseModal({ visible, onClose, onSubmit }) {
+  const [date] = useState(new Date().toLocaleDateString("uk-UA"));
+  const [category, setCategory] = useState("");
+  const [amount, setAmount] = useState("");
+  const [comment, setComment] = useState("");
   const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
-
-  // Коли змінюються початкові пропси — оновлюємо стани
-  useEffect(() => {
-    setDate(initialDate);
-    setCategory(initialCategory);
-    setAmount(initialAmount.toString());
-    setComment(initialComment);
-  }, [initialCategory, initialAmount, initialComment, initialDate, visible]);
 
   const handleSave = () => {
     if (category && parseFloat(amount) > 0) {
-      onSubmit({ category, amount: parseFloat(amount), comment, date });
-      // Очистити стан після відправлення (можна, але не обов'язково)
-      // setCategory("");
-      // setAmount("");
-      // setComment("");
-      // setDate(new Date().toLocaleDateString("uk-UA"));
+      onSubmit({ category, amount: parseFloat(amount) });
+      setCategory("");
+      setAmount("");
+      setComment("");
       onClose();
     }
   };
@@ -62,6 +44,7 @@ export default function ExpenseModal({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
+          {/* Header */}
           <View style={styles.headerRow}>
             <Text style={styles.modalTitle}>Внесення даних про розходи</Text>
             <TouchableOpacity onPress={onClose}>
@@ -69,14 +52,11 @@ export default function ExpenseModal({
             </TouchableOpacity>
           </View>
 
+          {/* Date */}
           <Text style={styles.label}>Вкажіть дату</Text>
-          <TextInput
-            style={styles.input}
-            value={date}
-            onChangeText={setDate}
-            placeholder="дд.мм.рррр"
-          />
+          <TextInput style={styles.input} value={date} editable={false} />
 
+          {/* Category & Amount */}
           <View style={styles.row}>
             <View style={{ flex: 1, marginRight: 4 }}>
               <Text style={styles.label}>Виберіть категорію</Text>
@@ -102,6 +82,7 @@ export default function ExpenseModal({
             </View>
           </View>
 
+          {/* Comment */}
           <Text style={styles.label}>Ваш коментар</Text>
           <TextInput
             style={styles.commentInput}
@@ -110,6 +91,7 @@ export default function ExpenseModal({
             multiline
           />
 
+          {/* Buttons */}
           <Pressable style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Внести дані</Text>
           </Pressable>
@@ -120,6 +102,7 @@ export default function ExpenseModal({
         </View>
       </View>
 
+      {/* Custom Category Menu */}
       <Modal visible={categoryMenuVisible} transparent animationType="fade">
         <Pressable
           style={styles.menuOverlay}
