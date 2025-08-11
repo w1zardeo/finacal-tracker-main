@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, StyleSheet, View, Text } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux"
+import { useRef } from "react";
 
 import ExpenseInput from "../components/ExpenseInput";
 import BlueButton from "../components/BlueButton";
@@ -18,6 +19,7 @@ import {
 
 function CalculatorScreen() {
   const dispatch = useDispatch();
+  const scrollRef = useRef(null); 
 
   const {
     housingData,
@@ -42,17 +44,6 @@ function CalculatorScreen() {
     dispatch(setter(updated));
   };
 
-  const totalBySection = (section) => {
-    let total = 0;
-    Object.values(section).forEach(({ value, frequency }) => {
-      const num = parseFloat(value);
-      if (!isNaN(num)) {
-        total += frequency === "Щороку" ? num / 12 : num;
-      }
-    });
-    return Math.round(total);
-  };
-
   const totalMonthly = [
     housingData,
     foodData,
@@ -71,9 +62,15 @@ function CalculatorScreen() {
     return acc;
   }, 0);
 
+  const handleCalculate = () => {
+    dispatch(setShowResult(true));
+    // ✅ Після оновлення стану — скролимо на верх
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
   return (
     <View style={styles.screen}>
-      <ScrollView style={styles.container}>
+      <ScrollView ref={scrollRef} style={styles.container}>
         {showResult && (
           <View style={styles.resultContainer}>
             <View style={styles.resultRow}>
@@ -167,7 +164,7 @@ function CalculatorScreen() {
             <View style={styles.buttonContainer}>
               <BlueButton
                 title="Розрахувати якість життя"
-                onPress={() => dispatch(setShowResult(true))}
+                onPress={handleCalculate} 
               />
             </View>
           )}

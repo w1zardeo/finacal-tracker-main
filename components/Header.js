@@ -1,17 +1,35 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSelector } from 'react-redux';
 
 function CustomHeader() {
+  const incomes = useSelector((state) => state.income?.incomes ?? []);
+  const expenses = useSelector((state) => state.expense?.expenses ?? []);
+
+  // Рахуємо загальний баланс = всі доходи - всі витрати
+  const totalIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const totalExpense = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const balance = totalIncome - totalExpense;
+
   return (
     <View style={styles.headerContainer}>
       <View style={styles.leftSection}>
         <Text style={styles.headerTitle}>Головне</Text>
       </View>
-        <MaterialCommunityIcons name="safe" size={22} color="white" style={{ marginLeft: 170 }} />
+
+      <MaterialCommunityIcons
+        name="safe"
+        size={22}
+        color="white"
+        style={{ marginLeft: 170 }}
+      />
+
       <View style={styles.rightSection}>
         <Text style={styles.balanceLabel}>Баланс:</Text>
-        <Text style={styles.balanceValue}>132 000</Text>
+        <Text style={styles.balanceValue}>
+          {balance.toLocaleString('uk-UA')}
+        </Text>
       </View>
     </View>
   );

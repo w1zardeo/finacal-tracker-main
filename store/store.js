@@ -15,20 +15,22 @@ import incomeReducer from "./incomeSlice";
 import expenseReducer from "./expenseSlice";
 import calculatorReducer from "./calculatorSlice";
 import goalsReducer from "./goalsSlice";
-import paymentsReducer from './paymentsSlice'
+import paymentsReducer from './paymentsSlice';
+import monthReducer from './monthSlice';
 
 const rootReducer = combineReducers({
   income: incomeReducer,
   expense: expenseReducer,
   calculator: calculatorReducer,
   goals: goalsReducer,
-  payments: paymentsReducer
+  payments: paymentsReducer,
+  month: monthReducer
 });
 
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  whitelist: ["income", "expense", "calculator", "goals", "payments"],
+  whitelist: ["income", "expense", "calculator", "goals", "payments", "month"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
