@@ -37,7 +37,6 @@ const styles = StyleSheet.create({
   onlyButtonContainer: {
     width: 370,
     marginLeft: 15,
-    marginBottom: 16,
     paddingVertical: 20,
     paddingHorizontal: 15,
     borderRadius: 12,
@@ -52,7 +51,6 @@ const styles = StyleSheet.create({
     color: "black",
   },
   centerTextWrapper: {
-    paddingTop: 50,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 10,

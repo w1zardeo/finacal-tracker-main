@@ -11,7 +11,7 @@ export default function BlueButton({ title, onPress, style = {} }) {
 
 const styles = StyleSheet.create({
   button: {
-    marginTop: 20,
+    marginTop: 10,
     backgroundColor: "#007AFF",
     paddingVertical: 12,
     borderRadius: 10,
